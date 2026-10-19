@@ -168,6 +168,24 @@
       },
       "observation_count": 1,
       "first_seen_at": "2026-10-18T09:35:44Z"
+    },
+    {
+      "date": "2026-10-19",
+      "captured_at": "2026-10-19T10:45:59Z",
+      "chain": {
+        "tip_height": 972134,
+        "mempool_tx_count": 46042,
+        "mempool_vsize_bytes": 25721292,
+        "total_fee_sats": 5499085,
+        "fee_fastest_sat_vb": 2,
+        "fee_half_hour_sat_vb": 1,
+        "fee_hour_sat_vb": 1,
+        "fee_economy_sat_vb": 1,
+        "fee_minimum_sat_vb": 1,
+        "mempool_size_mb": 25.721
+      },
+      "observation_count": 1,
+      "first_seen_at": "2026-10-19T10:45:59Z"
     }
   ]
 }
