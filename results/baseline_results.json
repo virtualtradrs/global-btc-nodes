@@ -1,15 +1,15 @@
 {
   "script_version": "1.0.0",
   "script": "scripts/run_baseline.py",
-  "as_of_date": "2026-10-17",
+  "as_of_date": "2026-10-18",
   "dataset_path": "data/btc_market_daily.csv",
-  "dataset_rows": 725,
-  "dataset_last_close": 81382.0,
+  "dataset_rows": 726,
+  "dataset_last_close": 82001.7,
   "period": {
     "start_date": "2025-01-30",
-    "end_date": "2026-10-17",
-    "trading_days": 626,
-    "calendar_days": 625,
+    "end_date": "2026-10-18",
+    "trading_days": 627,
+    "calendar_days": 626,
     "warmup_rows_used": 99
   },
   "params": {
@@ -32,27 +32,27 @@
   "net_of_costs": true,
   "metrics": {
     "sma_crossover_20_100": {
-      "total_return_pct": -10.76,
-      "cagr_pct": -6.44,
+      "total_return_pct": -10.08,
+      "cagr_pct": -6.01,
       "max_drawdown_pct": 33.72,
       "num_trades": 9,
       "win_rate_pct": 40.0,
-      "pct_time_in_market": 44.25,
-      "final_equity": 8924.15,
+      "pct_time_in_market": 44.34,
+      "final_equity": 8992.1,
       "round_trips": 5
     },
     "buy_and_hold": {
-      "total_return_pct": -22.42,
-      "cagr_pct": -13.79,
+      "total_return_pct": -21.83,
+      "cagr_pct": -13.39,
       "max_drawdown_pct": 53.09,
       "num_trades": 1,
       "win_rate_pct": 0.0,
       "pct_time_in_market": 100.0,
-      "final_equity": 7757.5,
+      "final_equity": 7816.57,
       "round_trips": 1
     }
   },
-  "outperformance_vs_buy_and_hold_pct": 11.66,
+  "outperformance_vs_buy_and_hold_pct": 11.75,
   "notes": "Price-only baseline on the committed BTC-USD daily candles; the node/mempool telemetry in data/btc_node_metrics.json has too few daily snapshots to be used as a backtest input. This is a measurement floor for future models, not trading advice and not a strategy recommendation.",
   "diagnostics": {
     "sma_crossover_20_100": {
