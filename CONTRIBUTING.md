@@ -26,6 +26,15 @@ python scripts/check_repo.py
 
 That script is the same one CI runs on every push. It checks that the community files, CI configuration and README structure are present, and it prints a readable list of what is missing and exits non-zero if anything is. If it passes locally, it will pass in CI.
 
+The data pipeline has an offline regression suite — no network, every fetch is served from fixtures:
+
+```bash
+pip install -r requirements-dev.txt
+python -m pytest tests -q
+```
+
+It drives `scripts/fetch_data.py` end to end (fetch → validate → write) against a temporary dataset, including the `--max-days` window trimming that silently broke the daily job in November 2026. CI runs it on every push and pull request; if you touch `scripts/fetch_data.py`, run it before you open the PR.
+
 ## Finding something to work on
 
 - Issues labelled [`good first issue`](https://github.com/virtualtradrs/global-btc-nodes/labels/good%20first%20issue) are scoped to be completed in one sitting and name the files to touch.

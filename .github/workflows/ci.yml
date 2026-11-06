@@ -38,6 +38,17 @@ jobs:
       - name: Check repository health (community files, README, CI wiring)
         run: python scripts/check_repo.py
 
+      # The pipeline regression suite is offline: every fetch is served from a
+      # fixture transport, so this proves the fetch -> validate -> write path
+      # (including --max-days trimming) without depending on a live API. This is
+      # the check that would have caught the November 2026 IndexError before the
+      # scheduled job went red five days in a row.
+      - name: Install test dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Run the pipeline regression tests
+        run: python -m pytest tests -q
+
       # Re-derives the committed baseline from the committed dataset and compares
       # it with results/baseline_results.json. Offline by design: the dataset is in
       # the repository, so a green run here proves a clean clone reproduces it.

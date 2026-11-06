@@ -1,0 +1,7 @@
+# Development-only dependencies (not needed to run the pipeline).
+#
+# CI installs this file before running `python -m pytest tests`. Keep it separate
+# from requirements.txt so a clean clone of the pipeline does not pull a test
+# runner it never uses.
+
+pytest>=8,<10

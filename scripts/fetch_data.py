@@ -545,15 +545,20 @@ def load_candles(path: Path) -> list[dict[str, Any]]:
     return rows
 
 
-def merge_candles(existing: list[dict[str, Any]], fetched: list[dict[str, Any]], today: str) -> list[int]:
+def merge_candles(existing: list[dict[str, Any]], fetched: list[dict[str, Any]], today: str) -> list[dict[str, Any]]:
     """Append closed candles only. Existing rows win, so the CSV is append-only.
 
     The in-progress UTC day is dropped: an unfinished candle is not a daily bar,
     and dropping it is what makes a same-day re-run produce an identical file.
-    Returns the indices of the newly appended rows.
+
+    Returns the newly appended *rows* themselves, not their indices. The caller
+    trims `existing` to `--max-days` right after this call, which deletes rows
+    from the front and shifts every index: an index captured here goes stale the
+    moment a full window is trimmed (it can even point past the end). The row
+    objects are stable, so they stay valid across the trim.
     """
     by_date = {row["date"]: row for row in existing}
-    added: list[int] = []
+    added: list[dict[str, Any]] = []
     for candle in sorted(fetched, key=lambda item: item["date"]):
         if candle["date"] >= today:
             continue  # still open
@@ -561,7 +566,7 @@ def merge_candles(existing: list[dict[str, Any]], fetched: list[dict[str, Any]],
             continue  # already recorded; never rewritten
         existing.append(candle)
         by_date[candle["date"]] = candle
-        added.append(len(existing) - 1)
+        added.append(candle)
     existing.sort(key=lambda row: row["date"])
     return added
 
@@ -731,7 +736,10 @@ def main(argv: list[str] | None = None) -> int:
         existing_candles = load_candles(csv_path)
         rows_before = len(existing_candles)
         today = now.strftime("%Y-%m-%d")
-        added_indices = merge_candles(existing_candles, fetched_candles, today)
+        # Capture the added rows *before* the trim below: trimming drops rows off
+        # the front of the window, so any index into `existing_candles` taken here
+        # would be stale (and out of range) by the time it is printed or summarised.
+        added_rows = merge_candles(existing_candles, fetched_candles, today)
         validate_candles(existing_candles)
         trim_candles(existing_candles, args.max_days)
 
@@ -743,8 +751,8 @@ def main(argv: list[str] | None = None) -> int:
         print(f"error: no tracked file was modified; the last good dataset in {data_dir} is intact", file=sys.stderr)
         return 2 if isinstance(exc, ValidationError) else 1
 
-    added = len(added_indices)
-    new_dates = [existing_candles[index]["date"] for index in added_indices]
+    added = len(added_rows)
+    new_dates = [row["date"] for row in added_rows]
     subject, summary = build_summary(
         written_snapshot, added, len(existing_candles), node_status, market_source, changed=True,
     )
@@ -772,8 +780,7 @@ def main(argv: list[str] | None = None) -> int:
             f"columns {','.join(CSV_COLUMNS)} | rows {rows_before} -> {len(existing_candles)} | "
             f"{added} new row(s) appended, existing rows untouched"
         )
-        for index in added_indices:
-            row = existing_candles[index]
+        for row in added_rows:
             print(
                 f"{row['date']},{row['open']:.2f},{row['high']:.2f},{row['low']:.2f},"
                 f"{row['close']:.2f},{row['volume']:.8f},{row['source']}"
