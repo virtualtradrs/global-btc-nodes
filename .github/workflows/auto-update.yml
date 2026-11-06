@@ -13,6 +13,11 @@ on:
     # daily candle is closed and can be appended as a finished bar.
     - cron: "17 5 * * *"
   workflow_dispatch:
+  # TEMPORARY (removed in the next commit): the team token cannot dispatch
+  # workflows (403, needs actions=write), so this branch-only push trigger is how
+  # the fix is proven end to end in Actions. It must not be merged to main.
+  push:
+    branches: [fix/candle-trim-index-regression]
 
 permissions:
   contents: write
