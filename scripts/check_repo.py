@@ -7,7 +7,9 @@ issue templates, and the README's structure (required sections, balanced code
 fences, a Mermaid block for the architecture diagram). It also validates the
 committed dataset and the committed baseline results in `results/`, including
 whether the results are still in step with the latest candle (a WARN, since the
-daily workflow regenerates them).
+daily workflow regenerates them), and compares every figure the docs quote about
+the dataset and the baseline with the data itself (see
+`scripts/check_readme_numbers.py`), so prose cannot drift away from the files.
 
 Runs on stdlib only so it works in a bare checkout and in CI before any
 dependency install. Exits non-zero and prints a readable list of problems.
@@ -264,6 +266,14 @@ def check_baseline_results(root: Path, problems: list[str], warnings: list[str])
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", default=".", help="repository root (default: cwd)")
+    parser.add_argument(
+        "--skip-readme-figures",
+        action="store_true",
+        help=(
+            "skip the comparison of the figures quoted in the docs against the data; used only by "
+            "the daily pipeline, which refreshes those figures later in the same run and re-checks them"
+        ),
+    )
     args = parser.parse_args()
 
     root = Path(args.root).resolve()
@@ -280,6 +290,8 @@ def main() -> int:
     checked += check_auto_update_workflow(root, problems)
     checked += check_dataset(root, problems)
     checked += check_baseline_results(root, problems, warnings)
+    if not args.skip_readme_figures:
+        checked += check_readme_figures(root, problems)
     if problems:
         print(f"check_repo: {len(problems)} problem(s) found in {root}\n")
         for problem in problems:
@@ -372,6 +384,25 @@ def check_dataset(root: Path, problems: list[str]) -> int:
             if dates != sorted(dates) or len(set(dates)) != len(dates):
                 problems.append("data/btc_market_daily.csv: rows must be sorted by unique date")
     return checks
+
+
+def check_readme_figures(root: Path, problems: list[str]) -> int:
+    """Every figure the docs quote must still match the committed data.
+
+    The daily pipeline changes the candle count, the window dates, the latest
+    close and the baseline metrics, so a hand-written number goes stale within a
+    day. `scripts/check_readme_numbers.py` parses those figures out of the prose
+    and compares them with `data/` and `results/`; it is a module so the same
+    comparison can be used by this check, by CI and by pytest.
+    """
+    scripts_dir = Path(__file__).resolve().parent
+    if str(scripts_dir) not in sys.path:
+        sys.path.insert(0, str(scripts_dir))
+    import check_readme_numbers  # noqa: PLC0415 - imported here so the path is set first
+
+    comparisons, figures_problems = check_readme_numbers.check(root)
+    problems.extend(figures_problems)
+    return comparisons
 
 
 if __name__ == "__main__":
