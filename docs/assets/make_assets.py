@@ -153,7 +153,13 @@ def make_showcase(candles: list[tuple[datetime, float, float]], snaps: list[dict
     hi = max(candles, key=lambda c: c[1])
     lo = min(candles, key=lambda c: c[1])
     last = candles[-1]
-    for point, label, va in ((hi, f"high {usd(hi[1])}  {hi[0]:%Y-%m-%d}", "bottom"), (lo, f"low {usd(lo[1])}  {lo[0]:%Y-%m-%d}", "top")):
+    # Panel 1 plots closes, so these are the highest and lowest *close* of the
+    # window, labelled as such: the intraday high/low columns hold different
+    # (also real) numbers and the README must not be read as quoting them.
+    for point, label, va in (
+        (hi, f"highest close ${hi[1]:,.2f}  {hi[0]:%Y-%m-%d}", "bottom"),
+        (lo, f"lowest close ${lo[1]:,.2f}  {lo[0]:%Y-%m-%d}", "top"),
+    ):
         ax1.scatter([point[0]], [point[1]], s=22, color="#ffffff", zorder=5)
         ax1.annotate(
             label,
@@ -166,13 +172,14 @@ def make_showcase(candles: list[tuple[datetime, float, float]], snaps: list[dict
         )
     ax1.scatter([last[0]], [last[1]], s=26, color=BLUE, zorder=5)
     ax1.annotate(
-        f"latest {usd(last[1])}  {last[0]:%Y-%m-%d}",
+        f"latest close ${last[1]:,.2f}  {last[0]:%Y-%m-%d}",
         xy=(last[0], last[1]),
-        xytext=(-10, 14),
+        xytext=(-8, -22),
         textcoords="offset points",
         color=BLUE,
         fontsize=10,
         ha="right",
+        va="top",
     )
     ax1.set_ylim(min(closes) * 0.9, max(closes) * 1.09)
     ax1.set_xlim(dates[0], dates[-1])
@@ -192,26 +199,56 @@ def make_showcase(candles: list[tuple[datetime, float, float]], snaps: list[dict
     style(ax2)
     sdates = [datetime.strptime(s["date"], "%Y-%m-%d") for s in snaps]
     mempool = [s["chain"]["mempool_size_mb"] for s in snaps]
-    reach = [s["node_network"]["reachable_nodes"] for s in snaps]
+    # The pipeline degrades honestly: when bitnodes.io cannot be reached the
+    # snapshot is still written, simply without a `node_network` block. Plot the
+    # census points that exist (a gap in the line, never an interpolated node
+    # count) and say on how many snapshots the census was actually measured.
+    reach = [
+        s["node_network"]["reachable_nodes"] if s.get("node_network") else float("nan")
+        for s in snaps
+    ]
+    measured = [value for value in reach if value == value]  # NaN-safe
     ax2.bar(sdates, mempool, width=0.18, color=ORANGE, alpha=0.55, label="mempool size (MB)")
     ax2.set_ylim(0, max(mempool) * 1.6)
     ax2.set_xlim(mdates.date2num(sdates[0]) - 0.5, mdates.date2num(sdates[-1]) + 0.5)
     ax2.set_ylabel("mempool MB", color=MUTED, fontsize=9)
-    ax2.xaxis.set_major_locator(mdates.DayLocator(interval=1))
-    ax2.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m-%d"))
+    ax2.xaxis.set_major_locator(mdates.AutoDateLocator(minticks=4, maxticks=8))
+    ax2.xaxis.set_major_formatter(mdates.DateFormatter("%m-%d"))
+    census_note = (
+        f"node census measured on {len(measured)} of {len(snaps)} snapshots"
+        if len(measured) != len(snaps)
+        else "node census on every snapshot"
+    )
     ax2.set_title(
-        "Bitcoin network telemetry (data/btc_node_metrics.json) — snapshots currently retained in the dataset: "
-        + ", ".join(f"{s['date']} ({s['chain']['tip_height']:,})" for s in snaps),
+        f"Bitcoin network telemetry (data/btc_node_metrics.json) — {len(snaps)} snapshots, "
+        f"{snaps[0]['date']} to {snaps[-1]['date']}\n"
+        f"chain tip {snaps[0]['chain']['tip_height']:,} → {snaps[-1]['chain']['tip_height']:,}  ·  {census_note}",
         color=FG,
         fontsize=10.5,
         loc="left",
     )
     ax2b = ax2.twinx()
-    ax2b.plot(sdates, reach, color=BLUE, marker="o", linewidth=1.8, label="reachable nodes")
-    ax2b.set_ylim(min(reach) * 0.95, max(reach) * 1.05)
+    if measured:
+        ax2b.plot(sdates, reach, color=BLUE, marker="o", linewidth=1.8, label="reachable nodes")
+        ax2b.set_ylim(min(measured) * 0.95, max(measured) * 1.05)
     ax2b.tick_params(colors=MUTED, labelsize=9)
-    for value, x in zip(reach, sdates):
-        ax2b.annotate(f"{value:,} nodes", xy=(x, value), xytext=(0, 8), textcoords="offset points", color=BLUE, fontsize=9, ha="center")
+    # Label the first and last census only: eleven per-day labels on a three-week
+    # axis collide into an unreadable smear, and every value is in the JSON.
+    measured_points = [(x, value) for x, value in zip(sdates, reach) if value == value]
+    if measured_points:
+        for (x, value), alignment, offset in (
+            (measured_points[0], "left", (4, 8)),
+            (measured_points[-1], "right", (-4, 8)),
+        ):
+            ax2b.annotate(
+                f"{value:,} nodes",
+                xy=(x, value),
+                xytext=offset,
+                textcoords="offset points",
+                color=BLUE,
+                fontsize=9,
+                ha=alignment,
+            )
     for label in ax2b.get_yticklabels():
         label.set_color(BLUE)
 
