@@ -4,4 +4,4 @@
 # from requirements.txt so a clean clone of the pipeline does not pull a test
 # runner it never uses.
 
-pytest>=8,<10
+pytest>=9.2.0,<10
