@@ -540,6 +540,34 @@
       },
       "observation_count": 1,
       "first_seen_at": "2026-11-15T12:42:55Z"
+    },
+    {
+      "date": "2026-11-16",
+      "captured_at": "2026-11-16T13:37:06Z",
+      "chain": {
+        "tip_height": 976136,
+        "mempool_tx_count": 70653,
+        "mempool_vsize_bytes": 31749685,
+        "total_fee_sats": 7106563,
+        "fee_fastest_sat_vb": 2,
+        "fee_half_hour_sat_vb": 1,
+        "fee_hour_sat_vb": 1,
+        "fee_economy_sat_vb": 1,
+        "fee_minimum_sat_vb": 1,
+        "mempool_size_mb": 31.75
+      },
+      "node_network": {
+        "source": "bitnodes.io/api/v1/snapshots/latest",
+        "snapshot_timestamp": 1794833743,
+        "total_nodes_crawled": 18956,
+        "node_latest_height": 976129,
+        "reachable_nodes": 19503,
+        "reachability_percent": 97.2,
+        "round_complete": true,
+        "snapshot_age_seconds": 2483
+      },
+      "observation_count": 1,
+      "first_seen_at": "2026-11-16T13:37:06Z"
     }
   ]
 }
