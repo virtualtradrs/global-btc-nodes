@@ -1,13 +1,13 @@
 {
   "script_version": "1.0.0",
   "script": "scripts/run_baseline.py",
-  "as_of_date": "2026-11-18",
+  "as_of_date": "2026-11-20",
   "dataset_path": "data/btc_market_daily.csv",
   "dataset_rows": 730,
-  "dataset_last_close": 62984.6,
+  "dataset_last_close": 58806.3,
   "period": {
-    "start_date": "2025-02-26",
-    "end_date": "2026-11-18",
+    "start_date": "2025-02-28",
+    "end_date": "2026-11-20",
     "trading_days": 631,
     "calendar_days": 630,
     "warmup_rows_used": 99
@@ -42,17 +42,17 @@
       "round_trips": 4
     },
     "buy_and_hold": {
-      "total_return_pct": -25.21,
-      "cagr_pct": -15.5,
+      "total_return_pct": -30.35,
+      "cagr_pct": -18.92,
       "max_drawdown_pct": 53.09,
       "num_trades": 1,
       "win_rate_pct": 0.0,
       "pct_time_in_market": 100.0,
-      "final_equity": 7478.92,
+      "final_equity": 6964.61,
       "round_trips": 1
     }
   },
-  "outperformance_vs_buy_and_hold_pct": 3.25,
+  "outperformance_vs_buy_and_hold_pct": 8.39,
   "notes": "Price-only baseline on the committed BTC-USD daily candles; the node/mempool telemetry in data/btc_node_metrics.json has too few daily snapshots to be used as a backtest input. This is a measurement floor for future models, not trading advice and not a strategy recommendation.",
   "diagnostics": {
     "sma_crossover_20_100": {
