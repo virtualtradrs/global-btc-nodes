@@ -4,7 +4,7 @@
 
 ### Why star this repo
 
-- **Live daily pipeline, real versioned data.** A scheduled GitHub Actions job fetches *Bitcoin network telemetry* and *BTC-USD market data* every day, validates it, and commits only what changed — no heartbeat commits, no hand-written rows. The committed dataset currently holds **730 closed daily candles (2024-11-22 → 2026-11-21)** plus **27 node/mempool snapshots (2026-10-13 → 2026-11-22)**; both files keep the most recent 730 entries (`--max-days`), so the window rolls forward as new data lands.
+- **Live daily pipeline, real versioned data.** A scheduled GitHub Actions job fetches *Bitcoin network telemetry* and *BTC-USD market data* every day, validates it, and commits only what changed — no heartbeat commits, no hand-written rows. The committed dataset currently holds **730 closed daily candles (2024-11-23 → 2026-11-22)** plus **28 node/mempool snapshots (2026-10-13 → 2026-11-23)**; both files keep the most recent 730 entries (`--max-days`), so the window rolls forward as new data lands.
 - **Bitcoin data most repositories don't have.** Mempool congestion, recommended fees, chain-tip height and the `bitnodes.io` reachable-node census, joined to daily OHLCV on UTC date — network state, not another copy of the price.
 - **Reproducible quantitative finance, not a notebook screenshot.** The data is byte-addressable in git, so a result is reproducible against the exact dataset revision it was computed from. Clone it and you have the same inputs, the same seeds and the same code path as everyone else.
 - **CI-verified on every push.** `scripts/check_repo.py` runs in `.github/workflows/ci.yml` and fails the build if the community files, CI wiring, README structure or dataset schema drift — and if any figure quoted in these docs disagrees with the committed data, because the numbers here are read back out of the prose and compared with `data/` and `results/` (`scripts/check_readme_numbers.py`).
@@ -128,9 +128,9 @@ A long-only SMA crossover (fast 20 / slow 100, flat otherwise) against buy-and-h
 | Strategy | Total return | CAGR | Max drawdown | Trades (fills) | Win rate | Time in market | Final equity |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | SMA 20/100 crossover | -21.96% | -13.39% | 40.25% | 8 | 25.00% | 44.85% | $7,803.73 |
-| Buy & hold | -30.25% | -18.85% | 53.09% | 1 | 0.00% | 100.00% | $6,974.88 |
+| Buy & hold | -35.22% | -22.25% | 53.09% | 1 | 0.00% | 100.00% | $6,478.06 |
 
-Over the 631 trading days from **2025-03-01 to 2026-11-21** (730 committed candles, the first 99 rows used only to warm the moving averages and excluded from the returns), the crossover finished **+8.29 percentage points** ahead of buy-and-hold after costs — inside a period where BTC-USD itself lost 30.25%. Read it plainly: both strategies lost money, and the honest summary is that this rule lost less than holding, not that it works.
+Over the 631 trading days from **2025-03-02 to 2026-11-22** (730 committed candles, the first 99 rows used only to warm the moving averages and excluded from the returns), the crossover finished **+13.26 percentage points** ahead of buy-and-hold after costs — inside a period where BTC-USD itself lost 35.22%. Read it plainly: both strategies lost money, and the honest summary is that this rule lost less than holding, not that it works.
 
 Reproduce it from a clean clone — no network, no notebook, standard library only:
 
@@ -142,7 +142,7 @@ python scripts/run_baseline.py --check   # re-derives the metrics and diffs them
 - **No look-ahead:** the signal is computed from closes up to and including day `t`, and the resulting position only applies from day `t+1` (filled at that close), so no day's return is earned using a price that was not yet observable.
 - **Costs:** 0.10% fee + 0.05% slippage per side are charged on the executed notional of every fill — entry and exit both pay them. The windows, the costs and the starting capital are a config block at the top of the script and are echoed into the output file.
 - **Deterministic:** no RNG, no clock, no network (`"randomness": "none (deterministic)"`, `"seed": null`); the dataset is the only input, so a clean clone re-derives identical numbers — which is exactly what the `--check` step in CI verifies.
-- **Price-only, on purpose:** the experiment reads `data/btc_market_daily.csv` only. `data/btc_node_metrics.json` holds 27 daily snapshots — still far too few to backtest a node-derived signal, and nothing here claims otherwise.
+- **Price-only, on purpose:** the experiment reads `data/btc_market_daily.csv` only. `data/btc_node_metrics.json` holds 28 daily snapshots — still far too few to backtest a node-derived signal, and nothing here claims otherwise.
 
 Full output, assumptions, per-strategy diagnostics and the rounding rule: [`results/baseline_results.json`](results/baseline_results.json) — see [`results/README.md`](results/README.md).
 
@@ -169,7 +169,7 @@ Baselines and evaluation come before modelling on purpose: a crossover that ties
 
 ![BTC-USD daily close history from the versioned dataset, with the Bitcoin node and mempool snapshots the pipeline retains](docs/assets/showcase.png)
 
-Both panels are drawn directly from the files in `data/` — nothing here is a mock-up or a placeholder. The upper panel is every closed daily candle in `data/btc_market_daily.csv`: **730 candles from 2024-11-22 to 2026-11-21**, a highest close of **$124,766.50 (2025-10-06)**, a lowest close of **$58,531.90 (2026-06-30)** and a latest close of **$60,088.60 (2026-11-21)**. The lower panel plots the Bitcoin network telemetry in `data/btc_node_metrics.json`: **27 snapshots from 2026-10-13 to 2026-11-22**, the latest recording chain tip **977,059**, a mempool of **18.8 MB** and **22,345** reachable nodes, against 26,142 in the first snapshot. That panel is not gap-free, and it is drawn that way on purpose: on a run where `bitnodes.io` could not be reached the snapshot carries chain and mempool data only, so the node line is drawn only where a census was actually measured — never interpolated across a gap.
+Both panels are drawn directly from the files in `data/` — nothing here is a mock-up or a placeholder. The upper panel is every closed daily candle in `data/btc_market_daily.csv`: **730 candles from 2024-11-23 to 2026-11-22**, a highest close of **$124,766.50 (2025-10-06)**, a lowest close of **$58,531.90 (2026-06-30)** and a latest close of **$61,170.10 (2026-11-22)**. The lower panel plots the Bitcoin network telemetry in `data/btc_node_metrics.json`: **28 snapshots from 2026-10-13 to 2026-11-23**, the latest recording chain tip **977,233**, a mempool of **34.9 MB** and **22,472** reachable nodes, against 26,142 in the first snapshot. That panel is not gap-free, and it is drawn that way on purpose: on a run where `bitnodes.io` could not be reached the snapshot carries chain and mempool data only, so the node line is drawn only where a census was actually measured — never interpolated across a gap.
 
 Regenerate both images yourself from the current dataset:
 
